@@ -16,6 +16,8 @@
 | 03 | [Stored Procedures - Employee](./03-stored-procedures-practical-employee.md) | Functions, DOB, Location |
 | 04 | [Complex Schema & Procedures](./04-complex-schema-procedures-practical.md) | Multi-table schema, Error handling |
 | 05 | [UDF Practical](./05-udf-practical.md) | Scalar, Table-valued functions |
+| 11 | [Triggers & Views Practical](./11-triggers-views-practical.md) | BEFORE/AFTER Triggers, Views |
+| 13 | [Indexing Practical](./13-indexing-practical.md) | Clustered, Non-Clustered, Composite Index |
 
 ### 📖 Theory Files
 
@@ -24,6 +26,9 @@
 | 06 | [UDF Theory](./06-udf-theory.md) | Built-in functions, UDF types |
 | 07 | [Views Theory](./07-views-theory.md) | Views, Materialized views |
 | 08 | [Stored Procedures Theory](./08-stored-procedures-theory.md) | SP syntax, Parameters, Control flow |
+| 09 | [MySQL Events Theory](./09-mysql-events-theory.md) | Scheduled events, Event scheduler |
+| 10 | [MySQL Triggers Theory](./10-mysql-triggers-theory.md) | Trigger types, NEW/OLD modifiers |
+| 12 | [Indexing Theory](./12-indexing-theory.md) | Clustered, Non-Clustered, Leftmost Prefix |
 
 ---
 
@@ -38,6 +43,7 @@
 
 ## 📊 Progress
 
+### Phase 1
 - [ ] Basic SQL & Tables
 - [ ] Stored Procedures (stuMarks)
 - [ ] Stored Procedures (Employee)
@@ -46,6 +52,13 @@
 - [ ] UDF Theory
 - [ ] Views Theory
 - [ ] Stored Procedures Theory
+
+### Phase 2
+- [ ] MySQL Events Theory
+- [ ] MySQL Triggers Theory
+- [ ] Triggers & Views Practical
+- [ ] Indexing Theory
+- [ ] Indexing Practical
 
 ---
 
