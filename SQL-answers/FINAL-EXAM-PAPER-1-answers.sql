@@ -108,18 +108,16 @@ ORDER BY a.AppointmentDate DESC;
 -- Question 2 (6 Marks): vw_DoctorEarnings
 -- ==========================================
 
-CREATE VIEW vw_DoctorEarnings AS
+CREATE VIEW vw_completedApp AS
 SELECT 
-    d.DoctorID,
     CONCAT(d.FirstName, ' ', d.LastName) AS DoctorName,
-    COUNT(a.AppointmentID) AS TotalCompletedAppointments,
-    SUM(a.Fee) AS TotalEarnings
-FROM doctors d
+    COUNT(a.AppointmentID) AS noapp,
+    SUM(a.Fee) AS TotalFee  -- ← Add alias for clarity
+FROM doctors d 
 JOIN appointments a ON d.DoctorID = a.DoctorID
-WHERE a.Status = 'Completed'
-GROUP BY d.DoctorID, d.FirstName, d.LastName
-HAVING COUNT(a.AppointmentID) >= 1
-WITH CHECK OPTION;
+WHERE a.Status = 'Completed' 
+GROUP BY d.DoctorID, d.FirstName, d.LastName  -- ← Some MySQL modes need this
+HAVING COUNT(a.AppointmentID) > 1;
 
 -- Test: SELECT * FROM vw_DoctorEarnings;
 
@@ -233,6 +231,20 @@ DELIMITER ;
 -- SELECT @total AS TotalAppts, @completed AS CompletedAppts, @earnings AS Earnings;
 
 -- ==========================================
+-- Question 6 (6 Marks): sp_GetDoctorStats (Without OUT)
+-- ==========================================
+-- If question doesn't ask for OUT, just return result set:
+CREATE PROCEDURE sp_GetDoctorStats(IN docID INT)
+BEGIN
+    SELECT 
+        COUNT(AppointmentID) AS TotalAppts,
+        (SELECT COUNT(AppointmentID) FROM appointments WHERE DoctorID = docID AND Status = 'Completed') AS CompletedAppts,
+        (SELECT SUM(Fee) FROM appointments WHERE DoctorID = docID AND Status = 'Completed') AS TotalEarnings
+    FROM appointments 
+    WHERE DoctorID = docID;
+END
+
+-- ==========================================
 -- Question 7 (6 Marks): sp_BookAppointment
 -- ==========================================
 
@@ -295,8 +307,8 @@ AFTER UPDATE ON appointments
 FOR EACH ROW
 BEGIN
     IF NEW.Status = 'Cancelled' AND OLD.Status != 'Cancelled' THEN
-        INSERT INTO appointment_cancellations (AppointmentID, PatientID, DoctorID)
-        VALUES (NEW.AppointmentID, NEW.PatientID, NEW.DoctorID);
+        INSERT INTO appointment_cancellations (AppointmentID, PatientID, DoctorID,CancellationDate)
+        VALUES (NEW.AppointmentID, NEW.PatientID, NEW.DoctorID,NOW());
     END IF;
 END //
 
