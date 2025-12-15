@@ -169,6 +169,32 @@ END //
 
 DELIMITER ;
 
+--simple version
+DELIMITER //
+
+CREATE FUNCTION fn_CalculateFine(p_BorrowID INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE v_DueDate DATE;
+    DECLARE fine DECIMAL(10,2);
+    
+    -- Get due date
+    SELECT DueDate INTO v_DueDate
+    FROM borrowings WHERE BorrowID = p_BorrowID;
+    
+    -- Check if overdue
+    IF CURDATE() > v_DueDate THEN
+        SET fine = DATEDIFF(CURDATE(), v_DueDate) * 10;
+    ELSE
+        SET fine = 0;
+    END IF;
+    
+    RETURN fine;
+END //
+
+DELIMITER ;
 -- Test: SELECT fn_CalculateFine(4) AS Fine;
 
 -- ==========================================
