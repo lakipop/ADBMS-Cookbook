@@ -68,7 +68,7 @@ INSERT INTO enrollments (StudentID, CourseID, EnrollmentDate) VALUES
 -- ==========================================
 -- Question 1: CREATE VIEW - StudentCourseDetails
 -- ==========================================
--- YOUR ANSWER: ✅ CORRECT
+
 
 CREATE VIEW StudentCourseDetails AS
 SELECT 
@@ -87,7 +87,7 @@ SELECT * FROM StudentCourseDetails;
 -- ==========================================
 -- Question 2: CREATE FUNCTION - GetStudentCourseCount
 -- ==========================================
--- YOUR ANSWER: ✅ CORRECT
+
 
 DELIMITER //
 
@@ -113,7 +113,7 @@ SELECT GetStudentCourseCount(2) AS TotalCourses;
 -- ==========================================
 -- Question 3: CREATE PROCEDURE - GetStudentCourses
 -- ==========================================
--- YOUR ANSWER: ✅ CORRECT
+
 
 DELIMITER //
 
@@ -140,7 +140,7 @@ CALL GetStudentCourses(3);
 -- ==========================================
 -- Question 4: CREATE PROCEDURE - GetCourseEnrollmentCount
 -- ==========================================
--- YOUR ANSWER: ✅ CORRECT
+
 
 DELIMITER //
 
@@ -164,7 +164,7 @@ SELECT @count AS TotalStudents;
 -- ==========================================
 -- Question 5: CREATE COMPOSITE INDEX
 -- ==========================================
--- YOUR ANSWER: ✅ CORRECT
+
 
 CREATE INDEX idx_stuCourse ON enrollments(StudentID, CourseID);
 
@@ -180,34 +180,3 @@ WHERE StudentID = 1;
 -- type: ref (using index)
 -- possible_keys: idx_stuCourse
 -- key: idx_stuCourse
-
--- ==========================================
--- ANSWER ANALYSIS SUMMARY
--- ==========================================
--- 
--- Q1 (View): ✅ CORRECT
---    - Proper CONCAT for full name
---    - Correct JOIN syntax
---    - All required columns included
---
--- Q2 (Function): ✅ CORRECT
---    - DETERMINISTIC keyword included
---    - Proper DECLARE and INTO usage
---    - Returns correct count
---
--- Q3 (Procedure with IN): ✅ CORRECT
---    - IN parameter properly defined
---    - All required columns returned
---    - Correct JOIN with WHERE clause
---
--- Q4 (Procedure with OUT): ✅ CORRECT
---    - Both IN and OUT parameters defined
---    - INTO correctly populates OUT parameter
---    - Called correctly with user variable
---
--- Q5 (Composite Index): ✅ CORRECT
---    - Index created on both StudentID and CourseID
---    - EXPLAIN shows index usage
---    - Leftmost prefix rule applies (StudentID first)
---
--- TOTAL: 5/5 Questions Correct! 🎉
