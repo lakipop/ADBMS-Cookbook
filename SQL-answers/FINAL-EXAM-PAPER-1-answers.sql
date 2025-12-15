@@ -333,6 +333,8 @@ DELIMITER //
 CREATE EVENT evt_AutoCancelOldPending
 ON SCHEDULE EVERY 1 DAY
 STARTS (TIMESTAMP(CURRENT_DATE) + INTERVAL 1 DAY)
+-- STARTS '2025-12-01 00:00:00' ENDS '2025-12-31 23:59:59' - Starts at specific  and end
+--STARTS CURRENT_TIMESTAMP                  -- Starts now
 DO
 BEGIN
     UPDATE appointments
@@ -343,6 +345,7 @@ END //
 
 DELIMITER ;
 
+STARTS '2025-12-01 00:00:00' ENDS '2025-12-31 23:59:59'
 -- Verify: SHOW EVENTS;
 
 -- ==========================================
