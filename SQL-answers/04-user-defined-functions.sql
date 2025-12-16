@@ -279,3 +279,80 @@ SELECT ID, Name, Age, Salary FROM Employee;
 -- 7. sp_GetCustomersByZipCode(zip) - Customers by zip
 -- 8. sp_GetEmployeeById(id) - Employee by ID
 -- 9. sp_GetEmployeesByAgeRange(min, max) - Employees in age range
+
+-- ==========================================
+-- Question 12: Create Emp Table (DOB/Location)
+-- ==========================================
+
+CREATE TABLE Emp (
+    Name VARCHAR(255),
+    DOB DATE,
+    Location VARCHAR(255)
+);
+
+INSERT INTO Emp VALUES ('Amit', '1970-01-08', 'Nuwara');
+INSERT INTO Emp VALUES ('Sumith', '1990-11-02', 'Galle');
+INSERT INTO Emp VALUES ('Sudha', '1980-11-06', 'Jaffna');
+
+-- ==========================================
+-- Question 13: Function - Get DOB
+-- ==========================================
+
+DELIMITER //
+
+CREATE FUNCTION getDob(empName VARCHAR(255))
+RETURNS DATE
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE empDob DATE;
+    
+    SELECT DOB INTO empDob
+    FROM Emp
+    WHERE Name = empName;
+    
+    RETURN empDob;
+END //
+
+DELIMITER ;
+
+-- ==========================================
+-- Question 14: Function - Get Location
+-- ==========================================
+
+DELIMITER //
+
+CREATE FUNCTION getLocation(empName VARCHAR(255))
+RETURNS VARCHAR(255)
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE empLocation VARCHAR(255);
+    
+    SELECT Location INTO empLocation
+    FROM Emp
+    WHERE Name = empName;
+    
+    RETURN empLocation;
+END //
+
+DELIMITER ;
+
+-- ==========================================
+-- Question 15: Call Functions
+-- ==========================================
+
+-- Get DOB of Amit
+SELECT getDob('Amit') AS DateOfBirth;
+-- Expected: 1970-01-08
+
+-- Get Location of Sumith
+SELECT getLocation('Sumith') AS Location;
+-- Expected: Galle
+
+-- Use in SELECT statement
+SELECT 
+    Name,
+    getDob(Name) AS DOB,
+    getLocation(Name) AS Location
+FROM Emp;

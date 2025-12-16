@@ -178,6 +178,52 @@
 
 ---
 
+### Question 12: Create Emp Table (DOB/Location)
+**Task:** Create a table named `Emp` with Name, DOB, and Location columns. Insert sample data:
+
+| Name | DOB | Location |
+|------|-----|----------|
+| Amit | 1970-01-08 | Nuwara |
+| Sumith | 1990-11-02 | Galle |
+| Sudha | 1980-11-06 | Jaffna |
+
+```sql
+-- Your answer here
+
+```
+
+---
+
+### Question 13: Function - Get DOB
+**Task:** Create a function named `getDob()` that takes the name of the employee, retrieves and returns the DOB value.
+
+```sql
+-- Your answer here
+
+```
+
+---
+
+### Question 14: Function - Get Location
+**Task:** Create a function named `getLocation()` that takes the name of the employee, retrieves and returns the location value.
+
+```sql
+-- Your answer here
+
+```
+
+---
+
+### Question 15: Call Functions
+**Task:** Call the functions to get DOB and location of employees.
+
+```sql
+-- Your answer here
+
+```
+
+---
+
 ## ✅ Checklist
 - [ ] Question 1: Create Database
 - [ ] Question 2: Create 'customers' Table
@@ -190,3 +236,7 @@
 - [ ] Question 9: Table-Valued Function - Customers by Zip Code
 - [ ] Question 10: Table-Valued Function - Employees by ID
 - [ ] Question 11: Modified Function - Employees by Age Range
+- [ ] Question 12: Create Emp Table (DOB/Location)
+- [ ] Question 13: Function - Get DOB
+- [ ] Question 14: Function - Get Location
+- [ ] Question 15: Call Functions
