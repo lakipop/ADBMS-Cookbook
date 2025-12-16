@@ -30,6 +30,8 @@ ADBMS-Cookbook/
 | 5 | Triggers | [theory/05-triggers.md](theory/05-triggers.md) |
 | 6 | Indexing | [theory/06-indexing.md](theory/06-indexing.md) |
 | 7 | Error Handling | [theory/07-error-handling.md](theory/07-error-handling.md) |
+| 8 | Transactions | [theory/08-transactions.md](theory/08-transactions.md) |
+| 9 | Security | [theory/09-security.md](theory/09-security.md) |
 
 ---
 
@@ -46,18 +48,26 @@ ADBMS-Cookbook/
 | 7 | Views | [practicals/07-views.md](practicals/07-views.md) | [SQL-answers/07-views.sql](SQL-answers/07-views.sql) |
 | 8 | Events | [practicals/08-events.md](practicals/08-events.md) | [SQL-answers/08-events.sql](SQL-answers/08-events.sql) |
 | 9 | Events (Southern Tyes) | [practicals/09-events-southern-tyes.md](practicals/09-events-southern-tyes.md) | [SQL-answers/09-events-southern-tyes.sql](SQL-answers/09-events-southern-tyes.sql) |
+| 10 | Transactions | [practicals/10-transactions.md](practicals/10-transactions.md) | [SQL-answers/10-transactions.sql](SQL-answers/10-transactions.sql) |
+| 11 | Security | [practicals/11-security.md](practicals/11-security.md) | [SQL-answers/11-security.sql](SQL-answers/11-security.sql) |
 
 ---
 
 ## 📝 Exam Papers
 
-### Sample Papers (60 Marks Each)
+### Sample Papers - 1 Hour (60 Marks)
 | Paper | Scenario | Questions | Answers | DB Setup |
 |-------|----------|-----------|---------|----------|
 | Sample Paper 1 | Hospital Management | [exam-papers/sample-paper-1-hospital.md](exam-papers/sample-paper-1-hospital.md) | [SQL-answers/sample-paper-1-hospital.sql](SQL-answers/sample-paper-1-hospital.sql) | [db-setups/sample-paper-1-hospital-setup.sql](db-setups/sample-paper-1-hospital-setup.sql) |
 | Sample Paper 2 | Library Management | [exam-papers/sample-paper-2-library.md](exam-papers/sample-paper-2-library.md) | [SQL-answers/sample-paper-2-library.sql](SQL-answers/sample-paper-2-library.sql) | [db-setups/sample-paper-2-library-setup.sql](db-setups/sample-paper-2-library-setup.sql) |
 
-### 2025 Exam Papers
+### Sample Papers - 2 Hours (100 Marks) ⭐ NEW
+| Paper | Scenario | Topics | Questions | Answers |
+|-------|----------|--------|-----------|---------|
+| Sample Paper 3 | Online Store | All Topics | [exam-papers/sample-paper-3-onlinestore.md](exam-papers/sample-paper-3-onlinestore.md) | [SQL-answers/sample-paper-3-onlinestore.sql](SQL-answers/sample-paper-3-onlinestore.sql) |
+| Sample Paper 4 | University | All Topics | [exam-papers/sample-paper-4-university.md](exam-papers/sample-paper-4-university.md) | [SQL-answers/sample-paper-4-university.sql](SQL-answers/sample-paper-4-university.sql) |
+
+### 2025 Actual Exam Papers
 | Paper | Marks | Questions | Answers |
 |-------|-------|-----------|---------|
 | Mid Exam 2025 | 20 | [exam-papers/2025-mid-exam.md](exam-papers/2025-mid-exam.md) | [SQL-answers/2025-mid-exam.sql](SQL-answers/2025-mid-exam.sql) |
@@ -99,6 +109,8 @@ mysql -u root -p < db-setups/sample-paper-2-library-setup.sql
 | **Triggers** | BEFORE/AFTER, INSERT/UPDATE/DELETE, NEW/OLD |
 | **Events** | Scheduled tasks, INTERVAL, START/END |
 | **Indexing** | Clustered, Non-clustered, Composite, Unique |
+| **Transactions** | ACID, COMMIT, ROLLBACK, SAVEPOINT, Isolation Levels |
+| **Security** | Users, GRANT, REVOKE, Roles, Encryption |
 
 ---
 
