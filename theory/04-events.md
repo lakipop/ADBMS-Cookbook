@@ -1,157 +1,348 @@
-# MySQL Events - Theory
+# 📖 MySQL Events - Theory Notes
 
-> **Category:** Lecture Slides (Theory)  
-> **Topics:** Scheduled Events, Event Scheduler, Automation
-
----
-
-## 📚 What are MySQL Events?
-
-**Definition:** MySQL events (scheduled events) are tasks executed according to a specified schedule.
-
-- Similar to **cron jobs** on Linux or **task schedulers** on Windows
-- Automates recurring tasks within the MySQL server
-- Known as **"temporal triggers"** - triggered by time, not table changes
-- Uses an **event scheduler thread** to monitor and execute events
-
-**Example:** Optimizing all tables in a database at 1:00 AM every Sunday.
+> **Topics:** Scheduled Tasks, Event Scheduler, ONE-TIME vs RECURRING Events
 
 ---
 
-## 🔄 Event Lifecycle
+## 🤔 What is an Event?
+
+A MySQL **Event** is a scheduled task that runs automatically at specific times - like a cron job inside the database.
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  Creation   │ ──► │ Activation  │ ──► │ Modification│
-│ CREATE EVENT│     │   ENABLE    │     │ ALTER EVENT │
-└─────────────┘     └─────────────┘     └──────┬──────┘
-                                               │
-                    ┌─────────────┐     ┌──────▼──────┐
-                    │  Removal    │ ◄── │Deactivation │
-                    │ DROP EVENT  │     │   DISABLE   │
-                    └─────────────┘     └─────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                     Think of it like this:                   │
+│                                                             │
+│   Alarm Clock = Wakes you up at scheduled time              │
+│   MySQL Event = Runs SQL at scheduled time                  │
+│                                                             │
+│   "Every day at 8 AM, clean old records"                    │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-| Stage | Description |
-|-------|-------------|
-| **Creation** | Use `CREATE EVENT` statement |
-| **Activation** | Enabled by default, or use `ALTER EVENT ... ENABLE` |
-| **Modification** | Use `ALTER EVENT` to change schedule/SQL |
-| **Deactivation** | Stop using `ALTER EVENT ... DISABLE` |
-| **Removal** | Remove using `DROP EVENT` |
+### Real-World Use Cases:
+- 🗑️ Delete old logs daily
+- 📊 Generate reports weekly
+- 💰 Calculate interest monthly
+- 🔔 Send reminder notifications
+- 🔄 Archive old data periodically
 
 ---
 
-## ⚙️ Event Scheduler Management
+## ⚡ Enabling Event Scheduler
+
+Before creating events, enable the scheduler:
 
 ```sql
--- Check scheduler status
-SHOW PROCESSLIST;
+-- Check current status
+SHOW VARIABLES LIKE 'event_scheduler';
 
 -- Enable scheduler
 SET GLOBAL event_scheduler = ON;
 
--- Disable scheduler
-SET GLOBAL event_scheduler = OFF;
+-- Or in my.cnf/my.ini:
+-- [mysqld]
+-- event_scheduler=ON
 ```
 
 ---
 
-## 🎯 Use Cases
+## 📝 Types of Events
 
-| Use Case | Description |
-|----------|-------------|
-| **Data Backup** | Automate regular backups for safety |
-| **Data Purging** | Remove outdated data, optimize performance |
-| **Reporting** | Generate periodic reports during off-peak hours |
-| **Maintenance** | Automate index rebuilding or table optimization |
+### 1. One-Time Event
+Runs **once** at a specific time, then disappears.
+
+```sql
+CREATE EVENT evt_OneTime
+ON SCHEDULE AT '2025-12-31 23:59:59'
+DO
+BEGIN
+    INSERT INTO logs (message, created_at)
+    VALUES ('Happy New Year!', NOW());
+END;
+```
+
+### 2. Recurring Event
+Runs **repeatedly** at intervals.
+
+```sql
+CREATE EVENT evt_Daily
+ON SCHEDULE EVERY 1 DAY
+DO
+BEGIN
+    DELETE FROM sessions WHERE created_at < NOW() - INTERVAL 7 DAY;
+END;
+```
 
 ---
 
-## 📝 Syntax
+## 🔨 Creating Events - Syntax
 
-### Create Event
+### Basic Syntax
+```sql
+CREATE EVENT event_name
+ON SCHEDULE schedule
+DO
+    event_body;
+```
+
+### Full Syntax
 ```sql
 CREATE EVENT [IF NOT EXISTS] event_name
 ON SCHEDULE schedule
-DO event_body;
-```
-
-### Alter Event
-```sql
-ALTER EVENT [IF EXISTS] event_name
-ON SCHEDULE schedule
 [ON COMPLETION [NOT] PRESERVE]
-[COMMENT 'comment']
 [ENABLE | DISABLE]
-DO event_body;
-```
-
-### Drop Event
-```sql
-DROP EVENT [IF EXISTS] event_name;
-```
-
-### Show Events
-```sql
-SHOW EVENTS [FROM db_name] [LIKE 'pattern' | WHERE expr];
+[COMMENT 'description']
+DO
+    event_body;
 ```
 
 ---
 
-## 📅 Schedule Examples
+## ⏰ Schedule Options
 
+### One-Time (AT)
 ```sql
--- Run once at specific time
-ON SCHEDULE AT '2024-01-01 00:00:00'
+-- At specific datetime
+AT '2025-12-31 23:59:59'
 
--- Run every day
+-- After interval from now
+AT CURRENT_TIMESTAMP + INTERVAL 1 HOUR
+
+-- Today at specific time
+AT TIMESTAMP(CURRENT_DATE) + INTERVAL 8 HOUR
+```
+
+### Recurring (EVERY)
+```sql
+-- Every hour
+EVERY 1 HOUR
+
+-- Every day
+EVERY 1 DAY
+
+-- Every week
+EVERY 1 WEEK
+
+-- Every month
+EVERY 1 MONTH
+```
+
+### With STARTS and ENDS
+```sql
+-- Start tomorrow, run every day, end in 30 days
 ON SCHEDULE EVERY 1 DAY
-
--- Run every Sunday at 1 AM
-ON SCHEDULE EVERY 1 WEEK
-STARTS '2024-01-07 01:00:00'
-
--- Run every hour for one month
-ON SCHEDULE EVERY 1 HOUR
-STARTS CURRENT_TIMESTAMP
-ENDS CURRENT_TIMESTAMP + INTERVAL 1 MONTH
+STARTS CURRENT_TIMESTAMP + INTERVAL 1 DAY
+ENDS CURRENT_TIMESTAMP + INTERVAL 30 DAY
 ```
 
 ---
 
-## 🎯 Practice Questions
+## 📊 INTERVAL Units
+
+| Unit | Example |
+|------|---------|
+| `SECOND` | `INTERVAL 30 SECOND` |
+| `MINUTE` | `INTERVAL 5 MINUTE` |
+| `HOUR` | `INTERVAL 2 HOUR` |
+| `DAY` | `INTERVAL 1 DAY` |
+| `WEEK` | `INTERVAL 1 WEEK` |
+| `MONTH` | `INTERVAL 1 MONTH` |
+| `YEAR` | `INTERVAL 1 YEAR` |
+
+---
+
+## 🔧 Event Options
+
+### ON COMPLETION PRESERVE
+By default, events are deleted after execution (for one-time) or after ENDS (for recurring).
+
+```sql
+-- Keep event definition after completion
+ON COMPLETION PRESERVE
+
+-- Delete event after completion (default)
+ON COMPLETION NOT PRESERVE
+```
+
+### ENABLE / DISABLE
+```sql
+-- Create but don't run yet
+CREATE EVENT evt_name
+ON SCHEDULE EVERY 1 DAY
+DISABLE
+DO ...;
+
+-- Enable later
+ALTER EVENT evt_name ENABLE;
+```
+
+---
+
+## 📝 Complete Examples
+
+### Example 1: Daily Cleanup
+```sql
+DELIMITER //
+
+CREATE EVENT evt_DailyCleanup
+ON SCHEDULE EVERY 1 DAY
+STARTS (TIMESTAMP(CURRENT_DATE) + INTERVAL 2 HOUR)  -- 2 AM daily
+COMMENT 'Remove old sessions daily'
+DO
+BEGIN
+    DELETE FROM sessions 
+    WHERE last_activity < NOW() - INTERVAL 30 DAY;
+END //
+
+DELIMITER ;
+```
+
+### Example 2: Weekly Report
+```sql
+DELIMITER //
+
+CREATE EVENT evt_WeeklyBackup
+ON SCHEDULE EVERY 1 WEEK
+STARTS '2025-12-22 00:00:00'  -- Next Sunday midnight
+DO
+BEGIN
+    INSERT INTO weekly_stats (week_start, total_orders, total_revenue)
+    SELECT 
+        DATE_SUB(CURDATE(), INTERVAL 7 DAY),
+        COUNT(*),
+        SUM(amount)
+    FROM orders
+    WHERE order_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY);
+END //
+
+DELIMITER ;
+```
+
+### Example 3: One-Time Reminder
+```sql
+CREATE EVENT evt_BirthdayReminder
+ON SCHEDULE AT '2025-12-25 09:00:00'
+ON COMPLETION PRESERVE  -- Keep after execution
+DO
+    INSERT INTO notifications (user_id, message)
+    VALUES (1, 'Merry Christmas!');
+```
+
+### Example 4: Auto-Cancel Pending Orders
+```sql
+DELIMITER //
+
+CREATE EVENT evt_CancelOldOrders
+ON SCHEDULE EVERY 1 HOUR
+DO
+BEGIN
+    UPDATE orders
+    SET status = 'Cancelled'
+    WHERE status = 'Pending'
+      AND created_at < NOW() - INTERVAL 24 HOUR;
+END //
+
+DELIMITER ;
+```
+
+---
+
+## 🔄 Managing Events
+
+### View All Events
+```sql
+SHOW EVENTS;
+SHOW EVENTS FROM database_name;
+```
+
+### View Event Definition
+```sql
+SHOW CREATE EVENT event_name;
+```
+
+### Modify Event
+```sql
+-- Change schedule
+ALTER EVENT event_name
+ON SCHEDULE EVERY 2 HOUR;
+
+-- Enable/Disable
+ALTER EVENT event_name ENABLE;
+ALTER EVENT event_name DISABLE;
+
+-- Rename
+ALTER EVENT old_name RENAME TO new_name;
+```
+
+### Delete Event
+```sql
+DROP EVENT IF EXISTS event_name;
+```
+
+---
+
+## ⚠️ Important Notes
+
+1. **Scheduler must be ON** - Events won't run otherwise
+2. **Server restart** - Events may need re-enabling
+3. **Privileges** - Need EVENT privilege to create
+4. **Time zone** - Uses server time zone
+5. **Missed events** - Won't run if server was down
+
+---
+
+## 📝 Common Exam Questions
 
 ### Q1: What is a MySQL Event?
-```
-Answer:
+**Answer:** An event is a scheduled task that runs SQL statements automatically at specified times, similar to a cron job in the database.
 
-```
+### Q2: How do you enable the event scheduler?
+**Answer:** `SET GLOBAL event_scheduler = ON;`
 
-### Q2: Events vs Triggers difference?
-```
-Answer:
+### Q3: Difference between AT and EVERY?
+**Answer:**
+- **AT:** One-time execution at specific datetime
+- **EVERY:** Recurring execution at intervals
 
-```
+### Q4: What does ON COMPLETION PRESERVE do?
+**Answer:** Keeps the event definition after it completes. Without it, one-time events are deleted after execution.
 
-### Q3: How to enable event scheduler?
-```
-Answer:
-
-```
-
-### Q4: List 3 use cases for events
-```
-Answer:
-
+### Q5: Create an event that runs every day at 8 AM
+**Answer:**
+```sql
+CREATE EVENT evt_Morning
+ON SCHEDULE EVERY 1 DAY
+STARTS (TIMESTAMP(CURRENT_DATE) + INTERVAL 8 HOUR)
+DO
+    -- your SQL here;
 ```
 
 ---
 
-## ✅ Checklist
-- [ ] Understand event definition
-- [ ] Know event lifecycle stages
-- [ ] Manage event scheduler (ON/OFF)
-- [ ] Know CREATE/ALTER/DROP syntax
-- [ ] Understand schedule options
-- [ ] Know use cases
+## ✅ Quick Reference
+
+```sql
+-- Enable scheduler
+SET GLOBAL event_scheduler = ON;
+
+-- One-time event
+CREATE EVENT evt_name
+ON SCHEDULE AT '2025-12-31 23:59:59'
+DO statement;
+
+-- Recurring event
+CREATE EVENT evt_name
+ON SCHEDULE EVERY 1 DAY
+STARTS CURRENT_TIMESTAMP
+DO statement;
+
+-- View events
+SHOW EVENTS;
+
+-- Modify event
+ALTER EVENT evt_name DISABLE;
+ALTER EVENT evt_name ENABLE;
+
+-- Delete event
+DROP EVENT IF EXISTS evt_name;
+```

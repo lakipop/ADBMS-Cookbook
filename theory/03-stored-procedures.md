@@ -1,85 +1,182 @@
-# Stored Procedures - Theory
+# 📖 Stored Procedures - Theory Notes
 
-> **Category:** Lecture Slides (Theory)  
-> **Topics:** Stored Procedures, Parameters, Control Flow, Error Handling
+> **Topics:** Procedures, Parameters (IN/OUT/INOUT), Control Flow, Error Handling
 
 ---
 
-## 📚 What is a Stored Procedure?
+## 🤔 What is a Stored Procedure?
 
-A **Stored Procedure** is a series of SQL statements stored in DB server to accomplish a task.
+A **Stored Procedure** is a group of SQL statements saved in the database that can be executed together with a single command.
 
-- Imperative (loops, conditions)
-- Pre-compiled for efficiency
-- Can be invoked multiple times
-- Can be written in other languages (C, Java)
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Think of it like this:                   │
+│                                                             │
+│   Regular SQL = Cooking from scratch every time             │
+│   Stored Procedure = Pre-made recipe you just execute       │
+│                                                             │
+│   Write once, call many times!                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Key Features:
+- 📦 **Stored in database** - Not in application code
+- ⚡ **Pre-compiled** - Faster execution
+- 🔄 **Reusable** - Call multiple times
+- 🔒 **Secure** - Control access permissions
 
 ---
 
 ## 🔨 Creating Stored Procedures
 
-### Syntax
-```sql
-CREATE PROCEDURE dbo.StoredProcedure (@Param datatype...)
-AS
-RETURN
-```
-
-### MySQL Example
+### Basic Syntax (MySQL)
 ```sql
 DELIMITER //
-CREATE PROCEDURE get_employees_in_dept(IN dept INT)
+
+CREATE PROCEDURE procedure_name(parameters)
 BEGIN
-    SELECT * FROM employees WHERE department_id = dept;
+    -- SQL statements here
 END //
+
 DELIMITER ;
 ```
 
-### Modifying & Dropping
-```sql
-ALTER PROCEDURE procedure_name ...;
-DROP PROCEDURE procedure_name;
+### Why DELIMITER?
+MySQL uses `;` to end statements. Inside procedure, we have multiple `;`. So we temporarily change delimiter to `//`.
+
 ```
+Without DELIMITER:
+CREATE PROCEDURE sp_test()
+BEGIN
+    SELECT * FROM table;  ← MySQL thinks procedure ends here!
+END;
 
-### Calling
-```sql
-CALL procedure_name(parameter_value_list);
-```
-
----
-
-## 📋 Parameters
-
-| Type | Description |
-|------|-------------|
-| **IN** | Input parameter (default) |
-| **OUT** | Output parameter |
-| **INOUT** | Both input and output |
-
-```sql
-CREATE PROCEDURE example(
-    IN input_param INT,
-    OUT output_param VARCHAR(50),
-    INOUT both_param INT
-)
+With DELIMITER:
+DELIMITER //
+CREATE PROCEDURE sp_test()
+BEGIN
+    SELECT * FROM table;  ← Now this is just part of procedure
+END //                    ← NOW procedure ends
+DELIMITER ;               ← Back to normal
 ```
 
 ---
 
-## 🔄 Body Statements
+## 📋 Parameter Types
 
-### Conditional Statements
+Procedures can have **three types** of parameters:
+
+| Type | Direction | Purpose |
+|------|-----------|---------|
+| `IN` | Into procedure | Pass value TO procedure |
+| `OUT` | Out of procedure | Get value FROM procedure |
+| `INOUT` | Both ways | Pass in AND get out |
+
+### IN Parameter (Default)
 ```sql
--- IF...THEN...ELSE
+CREATE PROCEDURE sp_GetStudent(IN studentID INT)
+BEGIN
+    SELECT * FROM students WHERE id = studentID;
+END;
+
+-- Call:
+CALL sp_GetStudent(5);
+```
+
+### OUT Parameter
+```sql
+CREATE PROCEDURE sp_CountStudents(OUT total INT)
+BEGIN
+    SELECT COUNT(*) INTO total FROM students;
+END;
+
+-- Call:
+CALL sp_CountStudents(@count);
+SELECT @count;  -- Shows the result
+```
+
+### INOUT Parameter
+```sql
+CREATE PROCEDURE sp_DoubleNumber(INOUT num INT)
+BEGIN
+    SET num = num * 2;
+END;
+
+-- Call:
+SET @myNum = 5;
+CALL sp_DoubleNumber(@myNum);
+SELECT @myNum;  -- Shows 10
+```
+
+### Visual Flow:
+```
+┌────────────┐
+│    IN      │  Value goes IN → (read only)
+├────────────┤
+│    OUT     │  Value comes OUT ← (write only)
+├────────────┤
+│   INOUT    │  Goes IN → processed → comes OUT ←→
+└────────────┘
+```
+
+---
+
+## 🎛️ Variables in Procedures
+
+### Declaring Variables
+```sql
+DECLARE variable_name datatype [DEFAULT value];
+```
+
+### Example:
+```sql
+CREATE PROCEDURE sp_Calculate()
+BEGIN
+    DECLARE total INT DEFAULT 0;
+    DECLARE average DECIMAL(10,2);
+    
+    SELECT COUNT(*) INTO total FROM students;
+    SELECT AVG(marks) INTO average FROM students;
+    
+    SELECT total, average;
+END;
+```
+
+---
+
+## 🔄 Control Flow Statements
+
+### IF...THEN...ELSE
+```sql
 IF condition THEN
-    statements;
-ELSEIF condition THEN
-    statements;
+    -- statements
+ELSEIF another_condition THEN
+    -- statements
 ELSE
-    statements;
+    -- statements
 END IF;
+```
 
--- CASE
+**Example:**
+```sql
+CREATE PROCEDURE sp_GetGrade(IN marks INT, OUT grade VARCHAR(2))
+BEGIN
+    IF marks >= 75 THEN
+        SET grade = 'A';
+    ELSEIF marks >= 65 THEN
+        SET grade = 'B';
+    ELSEIF marks >= 55 THEN
+        SET grade = 'C';
+    ELSEIF marks >= 45 THEN
+        SET grade = 'S';
+    ELSE
+        SET grade = 'F';
+    END IF;
+END;
+```
+
+### CASE Statement
+```sql
 CASE expression
     WHEN value1 THEN statements;
     WHEN value2 THEN statements;
@@ -87,100 +184,164 @@ CASE expression
 END CASE;
 ```
 
-### Loop Statements
+**Example:**
 ```sql
--- LOOP
-label: LOOP
-    statements;
-    IF condition THEN LEAVE label; END IF;
-END LOOP;
+CASE status
+    WHEN 'A' THEN SET message = 'Active';
+    WHEN 'I' THEN SET message = 'Inactive';
+    ELSE SET message = 'Unknown';
+END CASE;
+```
 
--- WHILE
+### WHILE Loop
+```sql
 WHILE condition DO
-    statements;
+    -- statements
 END WHILE;
 ```
 
-### Other Statements
-- `FOR` - Loop with counter
-- `GOTO` - Jump to label
-- `RETURN` - Exit procedure
+**Example:**
+```sql
+DECLARE counter INT DEFAULT 1;
+WHILE counter <= 10 DO
+    INSERT INTO numbers VALUES (counter);
+    SET counter = counter + 1;
+END WHILE;
+```
+
+### LOOP with LEAVE
+```sql
+loop_label: LOOP
+    -- statements
+    IF condition THEN
+        LEAVE loop_label;  -- Exit loop
+    END IF;
+END LOOP;
+```
 
 ---
 
-## ✅ Advantages
+## ⚠️ Error Handling
 
-| Advantage | Description |
+### DECLARE HANDLER Syntax
+```sql
+DECLARE handler_action HANDLER FOR condition statement;
+```
+
+### Handler Actions:
+| Action | Behavior |
+|--------|----------|
+| `EXIT` | Stop procedure after handling |
+| `CONTINUE` | Continue to next statement |
+
+### Common Error Codes:
+| Code | Meaning |
+|------|---------|
+| `1062` | Duplicate key |
+| `1452` | Foreign key violation |
+| `SQLEXCEPTION` | Any SQL error |
+| `NOT FOUND` | No data found |
+
+### Example with Error Handling:
+```sql
+CREATE PROCEDURE sp_SafeInsert(IN studentID INT, IN name VARCHAR(50))
+BEGIN
+    DECLARE EXIT HANDLER FOR 1062
+    BEGIN
+        SELECT 'Error: Duplicate student ID!' AS Message;
+    END;
+    
+    INSERT INTO students (id, name) VALUES (studentID, name);
+    SELECT 'Student added successfully!' AS Message;
+END;
+```
+
+---
+
+## ✅ Advantages of Stored Procedures
+
+| Advantage | Explanation |
 |-----------|-------------|
-| **Performance** | Pre-compilation |
-| **Reduced Network Traffic** | One call vs multiple |
-| **Separation of Concerns** | DB logic separate |
-| **Security** | Grant EXECUTE permission |
-| **Server Power** | Full server resources |
+| **Performance** | Pre-compiled, cached execution plan |
+| **Reduced Network** | One call instead of multiple queries |
+| **Security** | Grant EXECUTE without table access |
+| **Reusability** | Write once, call from anywhere |
+| **Maintainability** | Change logic in one place |
+
+---
 
 ## ⚠️ Disadvantages
 
-| Disadvantage | Description |
+| Disadvantage | Explanation |
 |--------------|-------------|
-| **Hidden Complexity** | Logic in database |
-| **Restricted Access** | Need DB access to debug |
-| **Limited IDE** | Less advanced tools |
-| **Testing** | Limited testing features |
+| **Database Lock-in** | Tied to specific DBMS |
+| **Debugging** | Harder to debug than app code |
+| **Version Control** | Difficult to track changes |
+| **Testing** | Limited unit testing support |
 
 ---
 
-## ⚖️ SP vs UDF Comparison
+## ⚖️ Stored Procedure vs Function
 
-| Feature | Stored Procedure | UDF |
-|---------|------------------|-----|
-| Call Method | EXEC/CALL | In SQL statement |
-| Return | Optional | Mandatory |
-| Server Variables | Can change | Cannot change |
-| Error Handling | Can continue | Stops on error |
-| Result Sets | Multiple | Single |
-| Use in SELECT | No | Yes |
-| Non-deterministic | Can use | Cannot use |
+| Feature | Stored Procedure | Function |
+|---------|------------------|----------|
+| **Call Method** | `CALL sp_name()` | `SELECT fn_name()` |
+| **Return Value** | Optional | Mandatory |
+| **Use in SELECT** | ❌ No | ✅ Yes |
+| **Multiple Results** | ✅ Yes | ❌ No |
+| **DML Operations** | ✅ Can INSERT/UPDATE/DELETE | ⚠️ Limited |
+| **Transaction** | ✅ Can use | ❌ Cannot |
 
 ---
 
-## 🎯 Questions
+## 📝 Common Exam Questions
 
 ### Q1: What is a Stored Procedure?
-```
-Answer:
+**Answer:** A stored procedure is a group of pre-compiled SQL statements stored in the database that can be executed together using CALL command.
 
-```
+### Q2: Explain IN, OUT, INOUT parameters
+**Answer:**
+- **IN:** Pass value into procedure (default, read-only)
+- **OUT:** Return value from procedure (write-only)
+- **INOUT:** Both pass in and return value
 
-### Q2: IN, OUT, INOUT difference?
-```
-Answer:
+### Q3: Why use DELIMITER when creating procedures?
+**Answer:** Because procedures contain multiple semicolons inside. DELIMITER temporarily changes the end-of-statement marker so MySQL doesn't prematurely end the CREATE PROCEDURE statement.
 
-```
+### Q4: What error handling options exist?
+**Answer:** 
+- **EXIT HANDLER:** Stop procedure on error
+- **CONTINUE HANDLER:** Handle error and continue
 
-### Q3: List 3 advantages of SP
-```
-Answer:
-
-```
-
-### Q4: SP vs UDF - main differences?
-```
-Answer:
-
-```
-
-### Q5: Control flow statements in SP?
-```
-Answer:
-
-```
+### Q5: List 3 advantages of stored procedures
+**Answer:**
+1. Better performance (pre-compiled)
+2. Reduced network traffic
+3. Enhanced security
 
 ---
 
-## ✅ Checklist
-- [ ] Understand SP definition
-- [ ] Know CREATE PROCEDURE syntax
-- [ ] Understand parameter types (IN/OUT/INOUT)
-- [ ] Know control flow statements
-- [ ] Understand advantages/disadvantages
-- [ ] Know SP vs UDF differences
+## ✅ Quick Reference
+
+```sql
+-- Create procedure
+DELIMITER //
+CREATE PROCEDURE sp_name(IN param1 INT, OUT param2 VARCHAR(50))
+BEGIN
+    -- statements
+END //
+DELIMITER ;
+
+-- Call procedure
+CALL sp_name(value, @output);
+SELECT @output;
+
+-- View all procedures
+SHOW PROCEDURE STATUS WHERE Db = 'database_name';
+
+-- View procedure definition
+SHOW CREATE PROCEDURE sp_name;
+
+-- Delete procedure
+DROP PROCEDURE IF EXISTS sp_name;
+```

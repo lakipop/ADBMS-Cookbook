@@ -1,65 +1,110 @@
-# MySQL Triggers - Theory
+# 📖 MySQL Triggers - Theory Notes
 
-> **Category:** Lecture Slides (Theory)  
-> **Topics:** Triggers, Row-Level, Statement-Level, NEW/OLD Modifiers
-
----
-
-## 📚 What is a Trigger?
-
-**Definition:** A set of SQL statements associated with a table, invoked automatically in response to an event (INSERT, UPDATE, DELETE).
-
-### Types (Standard)
-| Type | Description |
-|------|-------------|
-| **Row-Level** | Activated for each row affected |
-| **Statement-Level** | Fired once per event regardless of rows |
+> **Topics:** BEFORE/AFTER Triggers, INSERT/UPDATE/DELETE, NEW/OLD Keywords
 
 ---
 
-## 🎯 Usage & Benefits
+## 🤔 What is a Trigger?
 
-| Benefit | Description |
-|---------|-------------|
-| **Business Rules** | Enforce rules and validate data |
-| **Audit Trails** | Maintain logs |
-| **Integrity Checks** | Check data integrity |
-| **Scheduled Tasks** | Run automated tasks |
-| **Performance** | Pre-compiled execution |
-| **Reduce Client Code** | Logic in database |
-
-## ⚠️ Limitations
-
-- Limited validations (extended only)
-- Invisible execution (hard to troubleshoot)
-- Increased server overhead
-
----
-
-## 📊 Trigger Types (Timing & Event)
+A **Trigger** is a stored program that automatically executes when a specific event (INSERT, UPDATE, DELETE) occurs on a table.
 
 ```
-              INSERT    UPDATE    DELETE
-           ┌─────────┬─────────┬─────────┐
-   BEFORE  │BI INSERT│BU UPDATE│BD DELETE│
-           ├─────────┼─────────┼─────────┤
-   AFTER   │AI INSERT│AU UPDATE│AD DELETE│
-           └─────────┴─────────┴─────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                     Think of it like this:                   │
+│                                                             │
+│   Motion Sensor Light = Light turns ON when you walk by     │
+│   Database Trigger = Code runs when data changes            │
+│                                                             │
+│   "Whenever someone updates salary, log the change"         │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**6 Combinations:**
-1. BEFORE INSERT
-2. AFTER INSERT
-3. BEFORE UPDATE
-4. AFTER UPDATE
-5. BEFORE DELETE
-6. AFTER DELETE
+### Key Characteristics:
+- 🔄 **Automatic** - No need to call manually
+- 📋 **Table-bound** - Attached to specific table
+- ⚡ **Event-driven** - Fires on INSERT, UPDATE, or DELETE
+- ⏰ **Timed** - BEFORE or AFTER the event
 
 ---
 
-## 📝 Syntax
+## 🎯 Why Use Triggers?
 
-### Create Trigger
+| Use Case | Example |
+|----------|---------|
+| **Audit Logging** | Record who changed what |
+| **Data Validation** | Check constraints before saving |
+| **Automatic Calculations** | Update totals/averages |
+| **Enforce Business Rules** | Prevent invalid operations |
+| **Maintain Related Data** | Update inventory when order placed |
+| **Cascading Changes** | Update child tables |
+
+---
+
+## 📊 Trigger Types
+
+### By Timing:
+| Timing | When it Runs |
+|--------|--------------|
+| `BEFORE` | Before data is saved to table |
+| `AFTER` | After data is saved to table |
+
+### By Event:
+| Event | When it Fires |
+|-------|---------------|
+| `INSERT` | New row added |
+| `UPDATE` | Existing row modified |
+| `DELETE` | Row removed |
+
+### 6 Possible Combinations:
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    TRIGGER TYPES                             │
+├─────────────────────────────────────────────────────────────┤
+│  BEFORE INSERT    │    BEFORE UPDATE    │    BEFORE DELETE  │
+├─────────────────────────────────────────────────────────────┤
+│  AFTER INSERT     │    AFTER UPDATE     │    AFTER DELETE   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔑 NEW and OLD Keywords
+
+**NEW** = The row being inserted/updated (new values)  
+**OLD** = The row before update/deletion (previous values)
+
+| Trigger Type | NEW | OLD |
+|--------------|-----|-----|
+| INSERT | ✅ Available | ❌ Doesn't exist |
+| UPDATE | ✅ (new values) | ✅ (old values) |
+| DELETE | ❌ Doesn't exist | ✅ Available |
+
+### Visual:
+```
+INSERT:  NULL ───────► [NEW Row]     (only NEW)
+UPDATE:  [OLD Row] ──► [NEW Row]     (both OLD and NEW)
+DELETE:  [OLD Row] ──► NULL          (only OLD)
+```
+
+### Example Usage:
+```sql
+-- In INSERT trigger
+SET NEW.created_at = NOW();  -- Modify incoming data
+
+-- In UPDATE trigger
+IF NEW.price != OLD.price THEN  -- Compare old vs new
+    INSERT INTO price_history VALUES (OLD.price, NEW.price);
+END IF;
+
+-- In DELETE trigger
+INSERT INTO archive VALUES (OLD.id, OLD.name);  -- Save before delete
+```
+
+---
+
+## 🔨 Creating Triggers - Syntax
+
+### Basic Syntax
 ```sql
 CREATE TRIGGER trigger_name
 {BEFORE | AFTER} {INSERT | UPDATE | DELETE}
@@ -70,154 +115,261 @@ BEGIN
 END;
 ```
 
-### Drop Trigger
+### With DELIMITER
 ```sql
-DROP TRIGGER [IF EXISTS] schema_name.trigger_name;
-```
+DELIMITER //
 
-### Show Triggers
-```sql
-SHOW TRIGGERS;
-```
-
----
-
-## 🔄 NEW vs OLD Modifiers
-
-| Modifier | Description | Available In |
-|----------|-------------|--------------|
-| `OLD.col_name` | Value before update/delete | UPDATE, DELETE |
-| `NEW.col_name` | New row value or value after update | INSERT, UPDATE |
-
-```sql
--- Example: Log old and new values
-CREATE TRIGGER log_update
-AFTER UPDATE ON students
+CREATE TRIGGER trigger_name
+AFTER INSERT ON table_name
 FOR EACH ROW
 BEGIN
-    INSERT INTO audit_log (old_name, new_name)
-    VALUES (OLD.name, NEW.name);
-END;
+    -- multiple statements here
+END //
+
+DELIMITER ;
 ```
 
 ---
 
-## 📝 Trigger Examples
+## 📝 Complete Examples
 
-### BEFORE INSERT - Auto Grade
+### Example 1: Auto-Set Timestamps
 ```sql
-CREATE TRIGGER set_grade
+DELIMITER //
+
+CREATE TRIGGER trg_SetCreatedAt
+BEFORE INSERT ON orders
+FOR EACH ROW
+BEGIN
+    SET NEW.created_at = NOW();
+    SET NEW.status = 'Pending';
+END //
+
+DELIMITER ;
+```
+
+### Example 2: Audit Trail (Log Changes)
+```sql
+DELIMITER //
+
+CREATE TRIGGER trg_LogSalaryChange
+AFTER UPDATE ON employees
+FOR EACH ROW
+BEGIN
+    IF NEW.salary != OLD.salary THEN
+        INSERT INTO salary_history (
+            employee_id, old_salary, new_salary, changed_at
+        ) VALUES (
+            NEW.employee_id, OLD.salary, NEW.salary, NOW()
+        );
+    END IF;
+END //
+
+DELIMITER ;
+```
+
+### Example 3: Update Inventory on Sale
+```sql
+DELIMITER //
+
+CREATE TRIGGER trg_DecreaseStock
+AFTER INSERT ON order_items
+FOR EACH ROW
+BEGIN
+    UPDATE products
+    SET stock_quantity = stock_quantity - NEW.quantity
+    WHERE product_id = NEW.product_id;
+END //
+
+DELIMITER ;
+```
+
+### Example 4: Prevent Invalid Data
+```sql
+DELIMITER //
+
+CREATE TRIGGER trg_ValidateAge
 BEFORE INSERT ON students
 FOR EACH ROW
 BEGIN
-    IF NEW.score < 35 THEN
-        SET NEW.grade = 'FAIL';
-    ELSE
-        SET NEW.grade = 'PASS';
-    END IF;
-END;
-```
-
-### AFTER INSERT - Notification
-```sql
-CREATE TRIGGER birthday_notify
-AFTER INSERT ON students
-FOR EACH ROW
-BEGIN
-    IF NEW.birthday IS NOT NULL THEN
-        INSERT INTO notifications (message)
-        VALUES (CONCAT('Birthday: ', NEW.name));
-    END IF;
-END;
-```
-
-### BEFORE UPDATE - Validation
-```sql
-CREATE TRIGGER validate_qty
-BEFORE UPDATE ON products
-FOR EACH ROW
-BEGIN
-    IF NEW.quantity > OLD.quantity * 2 THEN
+    IF NEW.age < 0 OR NEW.age > 150 THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Quantity increase too large';
+        SET MESSAGE_TEXT = 'Invalid age value';
     END IF;
-END;
+END //
+
+DELIMITER ;
 ```
 
-### AFTER UPDATE - Logging
+### Example 5: Auto-Calculate Total
 ```sql
-CREATE TRIGGER log_class_change
-AFTER UPDATE ON students
+DELIMITER //
+
+CREATE TRIGGER trg_CalculateOrderTotal
+AFTER INSERT ON order_items
 FOR EACH ROW
 BEGIN
-    IF OLD.class != NEW.class THEN
-        INSERT INTO class_log (student_id, old_class, new_class)
-        VALUES (NEW.id, OLD.class, NEW.class);
-    END IF;
-END;
+    UPDATE orders
+    SET total_amount = (
+        SELECT SUM(quantity * price)
+        FROM order_items
+        WHERE order_id = NEW.order_id
+    )
+    WHERE order_id = NEW.order_id;
+END //
+
+DELIMITER ;
 ```
 
-### BEFORE DELETE - Archive
+### Example 6: Archive Deleted Records
 ```sql
-CREATE TRIGGER archive_salary
+DELIMITER //
+
+CREATE TRIGGER trg_ArchiveEmployee
 BEFORE DELETE ON employees
 FOR EACH ROW
 BEGIN
-    INSERT INTO salary_archive (emp_id, salary, deleted_at)
-    VALUES (OLD.id, OLD.salary, NOW());
-END;
-```
+    INSERT INTO employees_archive (
+        id, name, department, deleted_at
+    ) VALUES (
+        OLD.id, OLD.name, OLD.department, NOW()
+    );
+END //
 
-### AFTER DELETE - Update Total
-```sql
-CREATE TRIGGER update_budget
-AFTER DELETE ON expenses
-FOR EACH ROW
-BEGIN
-    UPDATE budget SET total = total - OLD.amount;
-END;
+DELIMITER ;
 ```
 
 ---
 
-## 🎯 Practice Questions
+## 🔒 SIGNAL SQLSTATE - Raise Errors
+
+Use `SIGNAL` to throw custom errors and stop operations:
+
+```sql
+SIGNAL SQLSTATE '45000'
+SET MESSAGE_TEXT = 'Your error message here';
+```
+
+### Common SQLSTATE Codes:
+| Code | Meaning |
+|------|---------|
+| `'45000'` | Generic error (user-defined) |
+| `'23000'` | Integrity constraint violation |
+| `'02000'` | No data found |
+
+---
+
+## 🔄 BEFORE vs AFTER - When to Use?
+
+| Use Case | Use BEFORE | Use AFTER |
+|----------|------------|-----------|
+| Modify incoming data | ✅ | ❌ |
+| Validate data | ✅ | ❌ |
+| Auto-fill defaults | ✅ | ❌ |
+| Log changes | ❌ | ✅ |
+| Update other tables | ❌ | ✅ |
+| Send notifications | ❌ | ✅ |
+
+### Simple Rule:
+```
+BEFORE = Change/Validate the data being saved
+AFTER = React to what was saved
+```
+
+---
+
+## 🔄 Managing Triggers
+
+### View All Triggers
+```sql
+SHOW TRIGGERS;
+SHOW TRIGGERS FROM database_name;
+```
+
+### View Trigger Definition
+```sql
+SHOW CREATE TRIGGER trigger_name;
+```
+
+### Delete Trigger
+```sql
+DROP TRIGGER IF EXISTS trigger_name;
+```
+
+### Modify Trigger
+**Note:** MySQL doesn't support `ALTER TRIGGER`. You must drop and recreate.
+
+```sql
+DROP TRIGGER IF EXISTS old_trigger;
+CREATE TRIGGER old_trigger ...;
+```
+
+---
+
+## ⚠️ Important Notes
+
+1. **Cannot modify same table in AFTER trigger** (causes infinite loop)
+2. **One trigger per timing+event combination** per table
+3. **Triggers don't fire on TRUNCATE** or CASCADE operations
+4. **Performance impact** - Complex triggers slow down operations
+5. **Hidden logic** - Can make debugging difficult
+
+---
+
+## 📝 Common Exam Questions
 
 ### Q1: What is a Trigger?
-```
-Answer:
+**Answer:** A trigger is a stored program that automatically executes when INSERT, UPDATE, or DELETE operations occur on a table.
 
-```
+### Q2: Explain NEW and OLD keywords
+**Answer:**
+- **NEW:** Contains the new row values (available in INSERT/UPDATE)
+- **OLD:** Contains the original row values (available in UPDATE/DELETE)
 
-### Q2: Row-Level vs Statement-Level?
-```
-Answer:
+### Q3: BEFORE vs AFTER trigger - when to use each?
+**Answer:**
+- **BEFORE:** To modify/validate data before saving (can change NEW values)
+- **AFTER:** To log changes or update other tables (data already saved)
 
-```
+### Q4: How many triggers can a table have?
+**Answer:** One trigger per combination of timing (BEFORE/AFTER) and event (INSERT/UPDATE/DELETE) = maximum 6 triggers per table.
 
-### Q3: List all 6 trigger timing combinations
-```
-Answer:
-
-```
-
-### Q4: When to use OLD vs NEW?
-```
-Answer:
-
-```
-
-### Q5: Trigger limitations?
-```
-Answer:
-
+### Q5: How to raise a custom error in a trigger?
+**Answer:**
+```sql
+SIGNAL SQLSTATE '45000'
+SET MESSAGE_TEXT = 'Custom error message';
 ```
 
 ---
 
-## ✅ Checklist
-- [ ] Understand trigger definition
-- [ ] Know Row-Level vs Statement-Level
-- [ ] Understand 6 timing/event combinations
-- [ ] Know CREATE/DROP syntax
-- [ ] Master NEW and OLD modifiers
-- [ ] Practice all trigger types
+## ✅ Quick Reference
+
+```sql
+-- Create BEFORE INSERT trigger
+CREATE TRIGGER trg_name
+BEFORE INSERT ON table_name
+FOR EACH ROW
+SET NEW.column = value;
+
+-- Create AFTER UPDATE trigger
+DELIMITER //
+CREATE TRIGGER trg_name
+AFTER UPDATE ON table_name
+FOR EACH ROW
+BEGIN
+    IF NEW.col != OLD.col THEN
+        INSERT INTO log VALUES (...);
+    END IF;
+END //
+DELIMITER ;
+
+-- Raise error
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error!';
+
+-- View triggers
+SHOW TRIGGERS;
+
+-- Delete trigger
+DROP TRIGGER IF EXISTS trg_name;
+```
